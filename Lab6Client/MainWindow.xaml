@@ -4,7 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Lab6Client"
-        mc:Ignorable="d"
+        xmlns:data="clr-namespace:System.Data;assembly=System.Data.Common"
+        mc:Ignorable="d" WindowState="Maximized"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
@@ -13,9 +14,17 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Canvas Name="Canvas" Grid.Row="0"/>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MaxWidth="1200" Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Canvas Name="Canvas" Grid.Column="0"/>
+            <TextBlock Grid.Column="1" Name="TableText" IsEnabled="False" FontSize="14" FontWeight="Bold" FontFamily="Arial" FontStretch="ExtraExpanded"/>
+        </Grid>
         <Grid Grid.Row="1" Background="Azure">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
@@ -24,11 +33,14 @@
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Label Grid.Row="0" Grid.Column="0" Content="Count of objects" FontSize="16"/>
-            <TextBox Grid.Row="0" Grid.Column="1" Name="CountOfObjectsTextBox" Text="5" TextAlignment="Right" FontSize="16"/>
+            <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
+                     Name="CountOfObjectsTextBox" Text="5" TextAlignment="Right" FontSize="16"/>
             <RadioButton Grid.Column="0" Grid.Row="1" Name="MinRadioButton" Content="Min" FontSize="16" 
                          VerticalContentAlignment="Center" IsChecked="True"
             />
             <RadioButton Grid.Column="1" Grid.Row="1" Name="MaxRadioButton" Content="Max" FontSize="16" 
+                         VerticalContentAlignment="Center"/>
+            <RadioButton Grid.Column="2" Grid.Row="1" Name="MaxWithReversionRadioButton" Content="Max With Reversion" FontSize="16" 
                          VerticalContentAlignment="Center"/>
         </Grid>
         <Button Name="StartButton" Grid.Row="3" Click="StartButton_OnClick" Content="Start" FontSize="24" FontWeight="Bold"/>

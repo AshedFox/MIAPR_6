@@ -3,5 +3,6 @@
 public enum AlgorithmType
 {
     Min,
-    Max
+    Max,
+    MaxWithReversion
 }

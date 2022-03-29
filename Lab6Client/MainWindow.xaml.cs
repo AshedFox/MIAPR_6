@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using AlgorithmLib;
+using Table = AlgorithmLib.Table;
 
 namespace Lab6Client
 {
@@ -21,6 +24,10 @@ namespace Lab6Client
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly Algorithm _algorithm = new ();
+        public DataTable MyDataTable { get; set; } = null!;
+        public double[,] Cells { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -28,25 +35,52 @@ namespace Lab6Client
 
         private void StartButton_OnClick(object sender, RoutedEventArgs e)
         {
-            var algo = new Algorithm();
             var countOfObjects = int.Parse(CountOfObjectsTextBox.Text);
+
+            var table = _algorithm.GenerateTable(countOfObjects);
+
+            var stringBuilder = new StringBuilder();
+
+            for (var i = 0; i < table.Cells.GetLength(0); i++)
+            {
+                for (var j = 0; j < table.Cells.GetLength(1); j++)
+                {
+                    stringBuilder.Append($"| {table.Cells[i, j]:00.00} |");
+                }
+                stringBuilder.Append(Environment.NewLine);
+            }
+
+            TableText.Text = stringBuilder.ToString();
             
             Canvas.Children.Clear();
-            var type = MinRadioButton.IsChecked.Value ? AlgorithmType.Min : AlgorithmType.Max;
-            var lastMove = algo.Process(countOfObjects, type);
-            DrawLines(lastMove, type == AlgorithmType.Min ? lastMove.NewValue.val : 100);
+            var type = AlgorithmType.Min;
+
+            if (MinRadioButton.IsChecked.Value)
+            {
+                type = AlgorithmType.Min;
+            } 
+            else if (MaxRadioButton.IsChecked.Value)
+            {
+                type = AlgorithmType.Max;
+            }
+            else if (MaxWithReversionRadioButton.IsChecked.Value)
+            {
+                type = AlgorithmType.MaxWithReversion;
+            }
+
+            
+            var lastMove = _algorithm.Process(type);
+            DrawLines(lastMove, type == AlgorithmType.Max ? _algorithm.Max : lastMove.NewValue.val);
         }
 
         private void DrawLines(Move lastMove, double max)
         {
-            var bottomOffset = 40;
+            var bottomOffset = 25;
             var widthPerMove = (Canvas.ActualWidth - 100) / 2;
-            var heightScale = (Canvas.ActualHeight - 50 - bottomOffset) / max;
-
-            var move = lastMove;
+            var heightScale = (Canvas.ActualHeight - bottomOffset - 40) / max;
             var centerX = Canvas.ActualWidth / 2;
 
-            DrawMoveLines(move, widthPerMove, heightScale, centerX, bottomOffset);
+            DrawMoveLines(lastMove, widthPerMove, heightScale, centerX, bottomOffset);
         }
 
         private void DrawMoveLines(Move move, double widthPerMove, double heightScale, double centerX, double bottomOffset)
@@ -54,7 +88,7 @@ namespace Lab6Client
             var txt1 = new TextBlock
             {
                 FontSize = 14,
-                Text = $"{move.NewValue.name}|{move.NewValue.val}"
+                Text = $"{move.NewValue.name} | {move.NewValue.val:#0.####}"
             };
             Canvas.SetTop(txt1, Canvas.ActualHeight - move.NewValue.val * heightScale - bottomOffset);
             Canvas.SetLeft(txt1, centerX - 20);

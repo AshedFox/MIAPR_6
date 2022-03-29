@@ -6,16 +6,14 @@ public class Algorithm
 {
     private Table _table = null!;
     private List<Move> _moves = null!;
-    private readonly double _min = 0;
-    private readonly double _max = 100;
+    public double Min { get; } = 0;
+    public double Max { get; } = 20;
     private readonly string _availableNames = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private byte _currentName;
     private AlgorithmType _currentType;
 
-    public Move Process(int numOfObjects, AlgorithmType type)
+    public Table GenerateTable(int numOfObjects)
     {
-        _currentType = type;
-        _moves = new List<Move>();
         _table = new Table(numOfObjects)
         {
             Cells = GenerateDistances(numOfObjects)
@@ -28,6 +26,20 @@ public class Algorithm
 
         PrintTable();
 
+        return _table;
+    }
+    
+    public Move Process(AlgorithmType type)
+    {
+        _currentName = 0;
+        _currentType = type;
+        _moves = new List<Move>();
+
+        if (_currentType == AlgorithmType.MaxWithReversion)
+        {
+            InverseDistances();
+        }
+
         while (_table.Cells.GetLength(0) > 1)
         {
             var (i, j) = Find();
@@ -38,6 +50,22 @@ public class Algorithm
         return _moves.Last();
     }
 
+    private void InverseDistances()
+    {
+        for (var i = 0; i < _table.Cells.GetLength(0); i++)
+        {
+            for (var j = 0; j < _table.Cells.GetLength(1); j++)
+            {
+                if (i == j)
+                {
+                    continue;
+                }
+                
+                _table.Cells[i, j] = 1 / _table.Cells[i, j];
+            }
+        }
+    }
+    
     private void PrintTable()
     {
         Debug.WriteLine("");
@@ -69,7 +97,7 @@ public class Algorithm
         {
             for (var j = i + 1; j < cells.GetLength(1); j++)
             {
-                cells[i, j] = random.GenerateDouble(_min, _max);
+                cells[i, j] = random.GenerateDouble(Min, Max);
             }
         }
         
@@ -86,7 +114,7 @@ public class Algorithm
 
     private (int i, int j) Find()
     {
-        if (_currentType == AlgorithmType.Min)
+        if (_currentType == AlgorithmType.Min || _currentType == AlgorithmType.MaxWithReversion)
         {
             return FindMin();
         } 
@@ -139,12 +167,10 @@ public class Algorithm
             NewValue = (_availableNames[_currentName++].ToString(), _table.Cells[x, y]),
             OldValues = new List<(string name, double val)>
             {
-                (_table.Headers[x], _currentType == AlgorithmType.Max ? _max : _min),
-                (_table.Headers[y], _currentType == AlgorithmType.Max ? _max : _min)
+                (_table.Headers[x], _currentType == AlgorithmType.Max ? Max : Min),
+                (_table.Headers[y], _currentType == AlgorithmType.Max ? Max : Min)
             }
         };
-
-        //var participants = _moves.FindAll(m => move.OldValues.Exists(ov => ov.name == m.NewValue.name));
         
         var oldMoves = _moves.FindAll(m => move.OldValues.Exists(ov => ov.name == m.NewValue.name));
         move.OldMoves = oldMoves;
@@ -158,8 +184,8 @@ public class Algorithm
             move.OldValues = oldMoves.Select(m => m.NewValue).ToList();
 
             move.OldValues.Add(oldMoves[0].NewValue.name == _table.Headers[x]
-                ? (_table.Headers[y], _currentType == AlgorithmType.Max ? _max : _min)
-                : (_table.Headers[x], _currentType == AlgorithmType.Max ? _max : _min));
+                ? (_table.Headers[y], _currentType == AlgorithmType.Max ? Max : Min)
+                : (_table.Headers[x], _currentType == AlgorithmType.Max ? Max : Min));
         }
 
         _moves.Add(move);
@@ -211,12 +237,13 @@ public class Algorithm
                 continue;
             }
 
-            if (_currentType == AlgorithmType.Min)
-            {
-                newRow[rowIndex++] = Math.Min(_table.Cells[x, j], _table.Cells[y, j]);
-            } else if (_currentType == AlgorithmType.Max)
+            if (_currentType == AlgorithmType.Max)
             {
                 newRow[rowIndex++] = Math.Max(_table.Cells[x, j], _table.Cells[y, j]);
+            } 
+            else
+            {
+                newRow[rowIndex++] = Math.Min(_table.Cells[x, j], _table.Cells[y, j]);
             }
         }
 
